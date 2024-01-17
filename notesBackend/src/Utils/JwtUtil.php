@@ -1,7 +1,9 @@
 <?php
 
 namespace NotesApp\Utils;
+
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class JwtUtil
 {
@@ -20,11 +22,11 @@ class JwtUtil
         self::loadSecretKey();
 
         $issuedAt = time();
-        $expirationTime = $issuedAt + ($expirationMinutes * 60);
+        $expirationTime = $issuedAt + ($expirationMinutes * 100);
 
         $token = [
-            'iat' => $issuedAt, 
-            'exp' => $expirationTime, 
+            'iat' => $issuedAt,
+            'exp' => $expirationTime,
             'data' => $data,
         ];
 
@@ -36,10 +38,11 @@ class JwtUtil
         self::loadSecretKey();
 
         try {
-            $decoded = JWT::decode($token, self::$secretKey);
+            $decoded = JWT::decode($token, new Key(self::$secretKey, 'HS256'));
             return (array) $decoded->data;
         } catch (\Exception $e) {
-        
+            echo 'Error decoding token: ' . $e->getMessage() . '<br>';
+            echo 'Provided token: ' . $token;
             return false;
         }
     }

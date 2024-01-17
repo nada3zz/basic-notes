@@ -10,4 +10,6 @@ return [
     'user' => $_ENV['DB_USER'],
     'password' => $_ENV['DB_PASSWORD'],
     'SECRET_KEY' => $_ENV['SECRET_KEY'],
+    'smtp_username' => $_ENV['SMTP_USERNAME'],
+    'smtp_password' => $_ENV['SMTP_PASSWORD'],
 ];

@@ -4,51 +4,87 @@ namespace NotesApp\Models;
 
 class UserModel
 {
-    private $id;
-    private $username;
-    private $email;
-    private $password;
-    
-    public function getId()
+    private $conn;
+    private $table = 'users';
+
+    public $id;
+    public $username;
+    public $email;
+    public $password;
+
+    public function __construct(\PDO $db)
     {
-        return $this->id;
+        $this->conn = $db;
     }
 
-    public function setId($id)
+    public function createUser()
     {
-        $this->id = $id;
+        try {
+            $hashedPassword = password_hash($this->password, PASSWORD_BCRYPT);
+            $query = 'INSERT INTO ' . $this->table . ' SET username = :username, email = :email, password = :password';
+
+            $stmt = $this->conn->prepare($query);
+
+            $this->username = htmlspecialchars(strip_tags($this->username));
+            $this->email = htmlspecialchars(strip_tags($this->email));
+
+            $stmt->bindParam(':username', $this->username);
+            $stmt->bindParam(':email', $this->email);
+            $stmt->bindParam(':password', $hashedPassword);
+
+            if ($stmt->execute()) {
+                return $this->conn->lastInsertId();
+            }
+
+            return false;
+        } catch (\PDOException $e) {
+            error_log('Error: ' . $e->getMessage());
+        }
     }
 
-    public function getUsername()
+    public function getUsersWithReminder()
     {
-        return $this->username;
+        try {
+            $query = 'SELECT username, email FROM ' . $this->table . ' as u
+            JOIN notes as n ON u.id = n.user_id 
+            WHERE n.reminder IS NOT NULL
+            ORDER BY n.reminder DESC';
+
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(1, $id);
+            $stmt->execute();
+
+            $users = $stmt->fetch(\PDO::FETCH_ASSOC);
+            return $users;
+           
+        } catch (\PDOException $e) {
+            echo 'Error: ' . $e->getMessage();
+        }
     }
 
-    public function setUsername($username)
+    public function login($email, $password)
     {
-        $this->username = $username;
-    }
+        $query = 'SELECT id, username, email, password FROM ' . $this->table . ' WHERE email = :email';
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
 
-    public function getEmail()
-    {
-        return $this->email;
-    }
+        try {
+            if ($stmt->execute()) {
+                $user = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-    public function setEmail($email)
-    {
-        $this->email = $email;
-    }
+                if ($user) {
+                    if (password_verify($password, $user['password'])) {
+                        unset($user['password']);
+                        return $user;
+                    }
+                }
+            }
+        } catch (\PDOException $e) {
 
-    public function getPassword()
-    {
-        return $this->password;
-    }
+            echo 'Error: ' . $e->getMessage();
+        }
 
-    public function setPassword($password)
-    {
-        $this->password = $password;
+        return false;
     }
-
 
 }
-

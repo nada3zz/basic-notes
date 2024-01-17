@@ -1,143 +1,199 @@
 <?php
 
 namespace NotesApp\Controllers;
-use NotesApp\Services\NoteService;
-use NotesApp\Utils\JwtUtil;
 
-class NoteController
+use NotesApp\Models\NoteModel;
+use NotesApp\Utils\Database;
+use NotesApp\Middleware\IsAuthMiddleware;
+use Exception;
+
+
+class NoteController extends BaseController
 {
-    private $noteService;
+    private $noteModel;
 
-    public function __construct()
+    public function __construct(Database $database, NoteModel $noteModel)
     {
-        $this->noteService = new NoteService();
+        parent::__construct($database);
+        $this->noteModel = $noteModel;
     }
 
-    public function get($vars)
+
+    public function createNote()
     {
-        $token = $this->getTokenFromHeaders();
+        try {
+            $data = json_decode(file_get_contents("php://input"));
+            if (
+                !isset($data->user_id) || !isset($data->title) || !isset($data->content)
+            ) {
+                $this->respondWithError('Missing required fields');
+                return;
+            }
 
-        if (!$token) {
-            echo json_encode(['error' => 'Unauthorized']);
-            return;
+            $validUserId = filter_var($data->user_id, FILTER_VALIDATE_INT);
+
+            if (!$validUserId || $validUserId <= 0 || !is_string($data->title) || !is_string($data->content) || !is_string($data->reminder)) {
+                $this->respondWithError('Invalid field types or values');
+                return;
+            }
+
+            $this->noteModel->user_id = $data->user_id;
+            $this->noteModel->title = $data->title;
+            $this->noteModel->content = $data->content;
+            $this->noteModel->reminder = $data->reminder;
+
+            $result = $this->noteModel->createNote();
+            if ($result) {
+                echo json_encode(
+                    array('message' => 'Note Created Successfully')
+                );
+            } else {
+                echo json_encode(
+                    array('message' => 'Note Not Created')
+                );
+            }
+        } catch (Exception $e) {
+            $this->respondWithError($e->getMessage());
         }
-
-        $userId = $this->getUserIdFromToken($token);
-
-        if (!$userId) {
-            echo json_encode(['error' => 'Unauthorized']);
-            return;
-        }
-
-        if (isset($vars['id'])) {
-            $noteId = $vars['id'];
-            $response = $this->noteService->getNoteById($noteId);
-        } else {
-            $response = $this->noteService->getUserNotes($userId);
-        }
-
-        echo json_encode($response);
-    }
-    
-
-    public function create()
-{
-    $token = $this->getTokenFromHeaders();
-
-    if (!$token) {
-        echo json_encode(['error' => 'Unauthorized']);
-        return;
-    }
-
-    $userId = $this->getUserIdFromToken($token);
-
-    if (!$userId) {
-        echo json_encode(['error' => 'Unauthorized']);
-        return;
     }
 
-    $input = json_decode(file_get_contents('php://input'), true);
-    $title = $input['title'] ?? null;
-    $content = $input['content'] ?? null;
-    $reminder = $input['reminder'];
 
-    if ($title === null || $content === null) {
-        echo json_encode(['error' => 'Title and content are required']);
-        return;
-    }
-
-    $response = $this->noteService->createNote($userId, $title, $content, $reminder);
-
-    echo json_encode($response);
-}
-
-
-public function update($vars)
-   {
-        $token = $this->getTokenFromHeaders();
-
-        if (!$token) {
-            echo json_encode(['error' => 'Unauthorized']);
-            return;
-        }
-
-        $userId = $this->getUserIdFromToken($token);
-
-        if (!$userId) {
-            echo json_encode(['error' => 'Unauthorized']);
-            return;
-        }
-
-        $input = json_decode(file_get_contents('php://input'), true);
-        $noteId = $vars['id'];
-        $title = $input['title'];
-        $content = $input['content'];
-        $reminder = $input['reminder'];
-
-        $response = $this->noteService->updateNote($noteId, $title, $content, $reminder);
-        echo json_encode($response);
-    }
-    
-
-    public function delete($vars)
+    public function getAllNotes()
     {
-        $token = $this->getTokenFromHeaders();
+        IsAuthMiddleware::authenticate();
 
-        if (!$token) {
-            echo json_encode(['error' => 'Unauthorized']);
-            return;
+        try {
+            $result = $this->noteModel->getAllNotes();
+
+            if ($result) {
+
+                $notesArr = array();
+
+                while ($row = $result->fetch(\PDO::FETCH_ASSOC)) {
+                    extract($row);
+
+                    $noteItem = array(
+                        'id' => $id,
+                        'title' => $title,
+                        'content' => html_entity_decode($content),
+                        'reminder' => $reminder,
+                        'user_id' => $user_id,
+                        'user_name' => $user_name,
+                        'created_at' => $created_at,
+                        'updated_at' => $updated_at,
+                    );
+
+                    array_push($notesArr, $noteItem);
+                }
+
+                echo json_encode($notesArr);
+            } else {
+                $this->respondWithError('No Notes Found', 404);
+            }
+        } catch (Exception $e) {
+            $this->respondWithError($e->getMessage());
         }
-
-        $userId = $this->getUserIdFromToken($token);
-
-        if (!$userId) {
-            echo json_encode(['error' => 'Unauthorized']);
-            return;
-        }
-
-        $noteId = $vars['id'];
-        $response = $this->noteService->deleteNote($noteId);
-        echo json_encode($response);
     }
 
-
-    private function getTokenFromHeaders()
+    public function getNoteById()
     {
-        $headers = getallheaders();
-        if (isset($headers['Authorization']) && strpos($headers['Authorization'], 'Bearer ') === 0) {
-            return trim(substr($headers['Authorization'], 7));
+        IsAuthMiddleware::authenticate();
+        try {
+            $noteId = isset($_GET['id']) ? $_GET['id'] : null;
+            if (!is_numeric($noteId) || $noteId <= 0) {
+
+                $this->respondWithError('Invalid Note ID');
+            }
+            $note = $this->noteModel->GetNoteByID($noteId);
+            if ($note) {
+                $note_arr = array(
+                    'id' => $noteId,
+                    'title' => $note->title,
+                    'content' => $note->content,
+                    'reminder' => $note->reminder,
+                    'user_id' => $note->user_id,
+                    'user_name' => $note->user_name,
+                    'created_at' => $note->created_at,
+                    'updated_at' => $note->updated_at,
+                );
+
+                echo json_encode($note_arr);
+            } else {
+                $this->respondWithError('No Notes Found', 404);
+            }
+        } catch (Exception $e) {
+
+            $this->respondWithError($e->getMessage());
         }
-
-        return null;
     }
 
-    private function getUserIdFromToken($token)
+
+    public function updateNote()
     {
-        $config = include_once(__DIR__ . '/../Config/env.php');
-        $secretKey = $config['SECRET_KEY']; 
-        $tokenData = JwtUtil::decodeToken($token, $secretKey);
+        IsAuthMiddleware::authenticate();
+        try {
+            $noteId = isset($_GET['id']) ? $_GET['id'] : null;
+            $data = json_decode(file_get_contents("php://input"));
 
-        return isset($tokenData['user_id']) ? $tokenData['user_id'] : null;
+            if (!is_numeric($noteId) || $noteId <= 0) {
+                $this->respondWithError('Invalid Note ID');
+                return;
+            }
+
+            if (
+                !isset($data->user_id) || !isset($data->title) || !isset($data->content) || !isset($data->created_at)
+            ) {
+                $this->respondWithError('Missing required fields');
+                return;
+            }
+
+            $validUserId = filter_var($data->user_id, FILTER_VALIDATE_INT);
+            $validUpdatedAt = strtotime($data->updated_at);
+
+            if (!$validUserId || $validUserId <= 0 || !is_string($data->title) || !is_string($data->content) || !is_string($data->reminder) || !$validUpdatedAt) {
+                $this->respondWithError('Invalid field types or values');
+                return;
+            }
+
+            $this->noteModel->user_id = $data->user_id;
+            $this->noteModel->title = $data->title;
+            $this->noteModel->content = $data->content;
+            $this->noteModel->reminder = $data->reminder;
+            $this->noteModel->updated_at = $data->updated_at;
+
+            $note = $this->noteModel->updateNote($noteId);
+            if ($note) {
+                echo json_encode(
+                    array('message' => 'Note Updated Successfully')
+                );
+            } else {
+                echo json_encode(
+                    array('message' => 'Note Not updated')
+                );
+            }
+        } catch (Exception $e) {
+            $this->respondWithError($e->getMessage());
+        }
     }
 
+    public function DeleteNote()
+    {
+        IsAuthMiddleware::authenticate();
+
+        try {
+            $noteId = isset($_GET['id']) ? $_GET['id'] : null;
+            $result = $this->noteModel->deleteNote($noteId);
+            if ($result) {
+                echo json_encode(
+                    array('message' => 'Note Deleted Successfully')
+                );
+            } else {
+                echo json_encode(
+                    array('message' => 'Note Not Deleted')
+                );
+            }
+        } catch (Exception $e) {
+            echo 'Error: ' . $e->getMessage();
+        }
+    }
 }
