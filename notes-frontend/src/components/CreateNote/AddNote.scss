@@ -1,0 +1,31 @@
+$background-color_1: #67d7cc;
+$background-color_2: #e1e1e1;
+$background-color_3: #ededed;
+
+.note.new {
+	background-color: $background-color_1;
+}
+textarea {
+	border: none;
+	resize: none;
+	background-color: $background-color_1;
+	&:focus {
+		outline: none;
+	}
+}
+.save {
+	background-color: $background-color_2;
+	border: none;
+	border-radius: 15px;
+	padding: 5px 10px 5px 10px;
+	&:hover {
+		background-color: $background-color_3;
+		cursor: pointer;
+	}
+}
+
+.note-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
