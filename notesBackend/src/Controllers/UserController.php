@@ -19,48 +19,57 @@ class UserController extends BaseController
 
     public function register()
     {
-        if (!isset($_POST['username']) || !isset($_POST['email']) || !isset($_POST['password'])) {
-            echo json_encode(['error' => 'Username, Email, Password are required']);
+        $data = json_decode(file_get_contents("php://input"));
+       
+        if (!isset($data->username) || !isset($data->email) || !isset($data->password)) {
+            echo json_encode(['message' => 'Username, Email, Password are required']);
             return;
         }
 
-        $username = $_POST['username'];
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            echo json_encode(['error' => 'Invalid email format']);
+        if (!filter_var($data->email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['message' => 'Invalid email format']);
             return;
         }
 
-        if (strlen($password) < 6) {
-            echo json_encode(['error' => 'Password must be at least 6 characters long']);
+        if (strlen($data->password) < 6) {
+            echo json_encode(['message' => 'Password must be at least 6 characters long']);
             return;
         }
 
-        $this->userModel->username = $username;
-        $this->userModel->email = $email;
-        $this->userModel->password = $password;
+        $this->userModel->username = $data->username;
+        $this->userModel->email = $data->email;
+        $this->userModel->password = $data->password;
 
 
         $newUserId = $this->userModel->createUser();
-
+        
         if ($newUserId) {
-            echo "User created Successfully with ID: $newUserId";
+            $userDataForToken = ['user_id' => $newUserId, 'username' => $data->username];
+            $token = JwtUtil::generateToken($userDataForToken);
+    
+            $response = [
+                'status' => 'success',
+                'token' => $token,
+                'user_id' => $newUserId,
+            ];
+    
+            echo json_encode($response);
         } else {
-            echo "User creation failed.";
+            echo json_encode(['status' => 'error', 'message' => 'User creation failed.']);
         }
     }
 
     public function logIn()
     {
-        if (!isset($_POST['email']) || !isset($_POST['password'])) {
+        $data = json_decode(file_get_contents("php://input"));
+
+        if (!isset($data->email) || !isset($data->password)) {
             echo json_encode(['error' => 'Email and Password are required']);
             return;
         }
 
-        $email = $_POST['email'];
-        $password = $_POST['password'];
+        $email = $data->email;
+        $password = $data->password;
 
         $authenticatedUser = $this->userModel->login($email, $password);
 
