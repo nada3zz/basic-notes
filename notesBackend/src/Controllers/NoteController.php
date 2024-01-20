@@ -176,7 +176,7 @@ class NoteController extends BaseController
         }
     }
 
-    public function DeleteNote()
+    public function deleteNote()
     {
         IsAuthMiddleware::authenticate();
 
