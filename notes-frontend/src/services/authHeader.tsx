@@ -5,8 +5,7 @@ export default function authHeader(): Record<string, string> {
 
 
   if (token) {
-    // return { Authorization: 'Bearer ' + token };
-    return { "Authorization": token };
+    return { "Authorization": `Bearer ${token}` };
   } else {
     return {};
   }
