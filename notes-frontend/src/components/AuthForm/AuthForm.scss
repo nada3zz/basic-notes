@@ -1,53 +1,40 @@
-$color_1: var(--color-gray-800);
-$color_2: var(--color-gray-300);
-$background-color_1: var(--color-gray-300);
-$background-color_2: transparent;
-$background-color_3: var(--color-primary-300);
-$background-color_4: var(--color-gray-800);
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
+}
 
 .form {
-	max-width: 40rem;
-	margin: 2rem auto;
-	label {
-		display: block;
-		width: 100%;
-	}
-	input {
-		display: block;
-		width: 100%;
-		font: inherit;
-		padding: 0.25rem;
-	}
-	textarea {
-		display: block;
-		width: 100%;
-		font: inherit;
-		padding: 0.25rem;
-	}
-}
-.actions {
-	display: flex;
-	gap: 1rem;
-	justify-content: flex-end;
-	align-items: center;
-	button {
-		font: inherit;
-		cursor: pointer;
-		padding: 0.5rem 1.5rem;
-		border-radius: 4px;
-		background-color: $background-color_1;
-		color: $color_1;
-		border: none;
-		&:hover {
-			background-color: $background-color_3;
-		}
-	}
-	a {
-		text-decoration: none;
-		background-color: $background-color_2;
-		color: $color_2;
-		&:hover {
-			background-color: $background-color_4;
-		}
-	}
+  display: grid;
+  gap: 20px;
+  width: 400px; 
+  padding: 20px;
+  border: 1px solid gray;
+  border-radius: 10px; 
+  grid-template-columns: 1fr; 
+  align-items: center;
+
+  label {
+    font-weight: bold;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid gray;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+  }
+
+  button {
+    border: none;
+    width: 100%;
+    padding: 10px;
+    background-color: teal;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
 }
