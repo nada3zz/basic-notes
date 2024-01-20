@@ -1,58 +1,66 @@
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 
-interface User {
-  email: string;
-  password: string;
-  accessToken: string;
+interface AuthResponse {
+  status: string;
+  token: string;
+  user_id: string;
+  message: string;
 }
 
 const API_URL = "http://localhost/luftborn-task/notesBackend/src/index.php";
 
-const signup = (email: string, password: string, username: string): Promise<User> => {
-  return axios
-    .post<User>(API_URL + "/register", {
-    username,
+const signup = async ( username: string, email: string, password: string): Promise<AuthResponse> => {
+  try {
+    const response = await axios.post<AuthResponse>(API_URL + "/register", {
+      username,
       email,
       password,
-    })
-    .then((response: AxiosResponse<User>) => {
-      if (response.data.accessToken) {
-        localStorage.setItem("user", JSON.stringify(response.data));
-      }
-
-      return response.data;
     });
+
+    if (response.data.status === 'success') {
+      localStorage.setItem("token", response.data.token);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Signup Failed:", error);
+    throw error; 
+  }
 };
 
-const login = (email: string, password: string): Promise<User> => {
-  return axios
-    .post<User>(API_URL + "/login", {
+
+const login = async (email: string, password: string): Promise<AuthResponse> => {
+  try {
+    const response = await axios.post<AuthResponse>(API_URL + "/login", {
       email,
       password,
-    })
-    .then((response: AxiosResponse<User>) => {
-      if (response.data.accessToken) {
-        localStorage.setItem("user", JSON.stringify(response.data));
-      }
-
-      return response.data;
     });
+
+    if (response.data.status === 'success') {
+      localStorage.setItem("token", response.data.token);
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Login failed:", error);
+    throw error; 
+  }
 };
+
 
 const logout = (): void => {
-  localStorage.removeItem("user");
+  localStorage.removeItem("token");
 };
 
-const getCurrentUser = (): User | null => {
-  const userString = localStorage.getItem("user");
-  return userString ? JSON.parse(userString) : null;
-};
 
 const authService = {
   signup,
   login,
   logout,
-  getCurrentUser,
 };
 
 export default authService;
+
+
+
+
