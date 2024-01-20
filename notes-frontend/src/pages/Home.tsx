@@ -1,15 +1,16 @@
-//import React, { useState, useEffect } from "react";
-//import { useNavigate } from "react-router-dom";
-//import noteService from './../../services/note';
-//import AuthService from "../../services/authService";
+import NavBar from "../components/NavBar/NavBar";
+//import CreateNote from "../components/CreateNote/AddNote";
+import HomeComponent from './../components/Home/Home';
 
 
 const Home: React.FC = () => {
   return (
     <div>
-      <h3>Hello there</h3>
-    </div>
+      <NavBar></NavBar>
+      <HomeComponent></HomeComponent>
+  </div>
   );
 };
 
 export default Home;
+
