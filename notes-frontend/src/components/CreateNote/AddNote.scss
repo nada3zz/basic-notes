@@ -2,6 +2,15 @@ $background-color_1: #67d7cc;
 $background-color_2: #e1e1e1;
 $background-color_3: #ededed;
 
+.addnote {
+	height: 30vh;
+	background-color: $background-color_2;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
 .note.new {
 	background-color: $background-color_1;
 }

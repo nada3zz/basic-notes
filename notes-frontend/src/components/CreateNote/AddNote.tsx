@@ -1,46 +1,54 @@
-import React, { useState, ChangeEvent } from 'react';
-import './AddNote.scss';
-import '../Note/Note/Note.scss';
+import React, { useState } from "react";
+import noteService from "../../services/noteService";
 
-
-interface AddNoteProps {
-  handleAddNote: (text: string) => void;
+interface CreateNoteProps {
+  onCreateNote: () => void;
 }
 
-const AddNote: React.FC<AddNoteProps> = ({ handleAddNote }) => {
-  const [noteText, setNoteText] = useState<string>('');
-  const characterLimit: number = 500;
+const CreateNote: React.FC<CreateNoteProps> = () => {
+  const [newNote, setNewNote] = useState({
+    title: "",
+    content: "",
+    reminder: new Date(),
+  });
 
-  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    if (characterLimit - event.target.value.length >= 0) {
-      setNoteText(event.target.value);
-    }
-  };
-
-  const handleSaveClick = () => {
-    if (noteText.trim().length > 0) {
-      handleAddNote(noteText);
-      setNoteText('');
+  const handleCreateNote = async () => {
+    try {
+      await noteService.createNote(newNote.title, newNote.content, newNote.reminder);
+      setNewNote({
+        title: "",
+        content: "",
+        reminder: new Date(),
+      });
+      onCreateNote();
+    } catch (error) {
+      console.error("Error creating note:", error);
     }
   };
 
   return (
-    <div className='note new'>
+    <div>
+      <h2>Create New Note</h2>
+      <label>Title:</label>
+      <input
+        type="text"
+        value={newNote.title}
+        onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
+      />
+      <label>Content:</label>
       <textarea
-        rows={8}
-        cols={10}
-        placeholder='Type to add a note...'
-        value={noteText}
-        onChange={handleChange}
-      ></textarea>
-      <div className='note-footer'>
-        <small>{characterLimit - noteText.length} Remaining</small>
-        <button className='save' onClick={handleSaveClick}>
-          Save
-        </button>
-      </div>
+        value={newNote.content}
+        onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
+      />
+      <label>Reminder:</label>
+      <input
+        type="text"
+        value={newNote.reminder.toString()}
+        onChange={(e) => setNewNote({ ...newNote, reminder: new Date(e.target.value) })}
+      />
+      <button onClick={handleCreateNote}>Create Note</button>
     </div>
   );
 };
 
-export default AddNote;
+export default CreateNote;

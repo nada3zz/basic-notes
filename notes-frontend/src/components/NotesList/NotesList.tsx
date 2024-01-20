@@ -1,39 +1,40 @@
-import React from 'react';
-import Note from '../Note/Note';
-import AddNote from '../createNote/AddNote';
-import './NotesList.scss';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import noteService from "../../services/noteService";
 
-
-interface NotesListProps {
-  notes: Array<{
-    id: string;
-    title: string;
-    content: string;
-    date: string; 
-  }>;
-  handleAddNote: (text: string) => void;
-  deleteNoteHandler: (id: string) => void;
+interface Note {
+  id: number;
+  title: string;
 }
 
-const NotesList: React.FC<NotesListProps> = ({
-  notes,
-  handleAddNote,
-  deleteNoteHandler,
-}) => {
+const NoteList: React.FC = () => {
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  const fetchNotes = async () => {
+    try {
+      const response = await noteService.getAllNotes();
+      setNotes(response.data);
+    } catch (error) {
+      console.error("Error fetching notes:", error);
+    }
+  };
+
   return (
-    <div className='notes-list'>
-      {notes.map((note) => (
-        <Note
-          id={note.id}
-          title={note.title}
-          content={note.content}
-          date={note.date}
-          handleDeleteNote={deleteNoteHandler}
-        />
-      ))}
-      <AddNote handleAddNote={handleAddNote} />
+    <div>
+      <h2>All Notes</h2>
+      <ul>
+        {notes.map((note) => (
+          <li key={note.id}>
+            <Link to={`/notes/${note.id}`}>{note.title}</Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
 
-export default NotesList;
+export default NoteList;

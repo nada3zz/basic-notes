@@ -1,45 +1,24 @@
-import React from 'react';
-import { useRouteLoaderData, useSubmit } from 'react-router-dom';
-import { MdDeleteForever } from 'react-icons/md';
-import './Note.scss';
+import React from "react";
 
-interface NoteProps {
-    note: {
-       id: string;
-       title: string;
-       content: string;
-       date: string; 
-    };
+interface NoteDetailsProps {
+  title: string;
+  content: string;
+  reminder: Date;
+  onUpdateNote: () => void;
+  onDeleteNote: () => void;
 }
 
-function Note({ note }: NoteProps) {
-    const token = useRouteLoaderData('root') as string | null;
-    const submit = useSubmit();
-  
-    function deleteNoteHandler() {
-      const proceed = window.confirm('Are you sure?');
-  
-      if (proceed) {
-        submit(null, { method: 'delete' });
-    }
-}
-
-return (
-    <div className='note'>
-      <span>{note.content}</span>
-      <div className='note-footer'>
-        <small>{note.date}</small>
-        <MdDeleteForever
-          onClick={() => deleteNoteHandler()}
-          className='delete-icon'
-          size='1.3em'
-        />
-      </div>
+const NoteDetails: React.FC<NoteDetailsProps> = ({ title, content, reminder, onUpdateNote, onDeleteNote }) => {
+  return (
+    <div>
+      <h2>Note Details</h2>
+      <p>Title: {title}</p>
+      <p>Content: {content}</p>
+      <p>Reminder: {reminder.toString()}</p>
+      <button onClick={onUpdateNote}>Update Note</button>
+      <button onClick={onDeleteNote}>Delete Note</button>
     </div>
   );
+};
 
-}
-
-
-
-export default Note;
+export default NoteDetails;
