@@ -26,7 +26,7 @@ Simple notes app performs simple CRUD functionalities, includes user authenticat
      # create .env with your configuration details
    ```
 
-3. Install CLient dependencies
+3. Install Client dependencies
   ```bash
       cd notes-frontend
       npm install
