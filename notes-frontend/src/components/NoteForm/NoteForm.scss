@@ -1,0 +1,43 @@
+.note-form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 55vh;
+  background-color: #ccc;
+  margin-bottom: 10px;
+}
+
+.noteForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 50%;
+  padding: 20px;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+input,
+textarea,
+button {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+button {
+  border: none;
+  background-color: teal;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}

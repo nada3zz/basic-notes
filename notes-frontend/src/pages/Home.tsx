@@ -1,13 +1,13 @@
 import NavBar from "../components/NavBar/NavBar";
-//import CreateNote from "../components/CreateNote/AddNote";
-import HomeComponent from './../components/Home/Home';
-
+import CreateNote from "../components/NoteForm/CreateNote";
+import NotesList from './../components/NotesList/NotesList';
 
 const Home: React.FC = () => {
   return (
     <div>
-      <NavBar></NavBar>
-      <HomeComponent></HomeComponent>
+      <NavBar/>
+      <CreateNote/>
+      <NotesList/>
   </div>
   );
 };

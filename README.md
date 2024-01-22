@@ -1,6 +1,6 @@
 # Notes App
 
-Notes app that performs simple CRUD functionalities, includes user authentication using JWT, and integrates email notifications for users based on set reminders.
+Simple notes app performs simple CRUD functionalities, includes user authentication using JWT, and integrates a simple cron job to send email notifications for users based on set reminders.
 
 
 ## Getting Started
@@ -26,5 +26,8 @@ Notes app that performs simple CRUD functionalities, includes user authenticatio
      # create .env with your configuration details
    ```
 
-
-
+3. Install CLient dependencies
+  ```bash
+      cd notes-frontend
+      npm install
+   ```

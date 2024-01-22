@@ -19,6 +19,6 @@ abstract class BaseController
     protected function respondWithError($message, $statusCode = 400)
     {
         http_response_code($statusCode);
-        echo json_encode(['error' => $message]);
+        echo json_encode(['message' => $message]);
     }
 }

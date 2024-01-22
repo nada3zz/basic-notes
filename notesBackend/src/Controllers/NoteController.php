@@ -21,23 +21,23 @@ class NoteController extends BaseController
 
     public function createNote()
     {
+        IsAuthMiddleware::authenticate();
+        $userId = IsAuthMiddleware::getUserId();
         try {
             $data = json_decode(file_get_contents("php://input"));
             if (
-                !isset($data->user_id) || !isset($data->title) || !isset($data->content)
+                !isset($data->title) || !isset($data->content)
             ) {
                 $this->respondWithError('Missing required fields');
                 return;
             }
 
-            $validUserId = filter_var($data->user_id, FILTER_VALIDATE_INT);
-
-            if (!$validUserId || $validUserId <= 0 || !is_string($data->title) || !is_string($data->content) || !is_string($data->reminder)) {
+            if ( !is_string($data->title) || !is_string($data->content) || !is_string($data->reminder)) {
                 $this->respondWithError('Invalid field types or values');
                 return;
             }
 
-            $this->noteModel->user_id = $data->user_id;
+            $this->noteModel->user_id = $userId;
             $this->noteModel->title = $data->title;
             $this->noteModel->content = $data->content;
             $this->noteModel->reminder = $data->reminder;
@@ -61,6 +61,7 @@ class NoteController extends BaseController
     public function getAllNotes()
     {
         IsAuthMiddleware::authenticate();
+        $userId = IsAuthMiddleware::getUserId();
 
         try {
             $result = $this->noteModel->getAllNotes();
@@ -86,7 +87,15 @@ class NoteController extends BaseController
                     array_push($notesArr, $noteItem);
                 }
 
-                echo json_encode($notesArr);
+               // echo json_encode($notesArr);
+            }
+
+            $filteredNotes = array_filter($notesArr, function ($note) use ($userId) {
+                return $note['user_id'] == $userId;
+            });
+
+            if (!empty($filteredNotes)) {
+                echo json_encode($filteredNotes);
             } else {
                 $this->respondWithError('No Notes Found', 404);
             }
@@ -98,6 +107,7 @@ class NoteController extends BaseController
     public function getNoteById()
     {
         IsAuthMiddleware::authenticate();
+        $userId = IsAuthMiddleware::getUserId();
         try {
             $noteId = isset($_GET['id']) ? $_GET['id'] : null;
             if (!is_numeric($noteId) || $noteId <= 0) {
@@ -105,7 +115,7 @@ class NoteController extends BaseController
                 $this->respondWithError('Invalid Note ID');
             }
             $note = $this->noteModel->GetNoteByID($noteId);
-            if ($note) {
+            if ($note  && $note->user_id == $userId ) {
                 $note_arr = array(
                     'id' => $noteId,
                     'title' => $note->title,
@@ -131,6 +141,7 @@ class NoteController extends BaseController
     public function updateNote()
     {
         IsAuthMiddleware::authenticate();
+        $userId = IsAuthMiddleware::getUserId();
         try {
             $noteId = isset($_GET['id']) ? $_GET['id'] : null;
             $data = json_decode(file_get_contents("php://input"));
@@ -140,29 +151,33 @@ class NoteController extends BaseController
                 return;
             }
 
+            $note = $this->noteModel->getNoteById($noteId);
+
+            if (!$note || $note->user_id != $userId) {
+                $this->respondWithError('Note not found or unauthorized');
+                return;
+            }
+
             if (
-                !isset($data->user_id) || !isset($data->title) || !isset($data->content) || !isset($data->created_at)
+               !isset($data->title) || !isset($data->content) 
             ) {
                 $this->respondWithError('Missing required fields');
                 return;
             }
 
-            $validUserId = filter_var($data->user_id, FILTER_VALIDATE_INT);
-            $validUpdatedAt = strtotime($data->updated_at);
 
-            if (!$validUserId || $validUserId <= 0 || !is_string($data->title) || !is_string($data->content) || !is_string($data->reminder) || !$validUpdatedAt) {
+            if (!is_string($data->title) || !is_string($data->content) || !is_string($data->reminder)) {
                 $this->respondWithError('Invalid field types or values');
                 return;
             }
 
-            $this->noteModel->user_id = $data->user_id;
             $this->noteModel->title = $data->title;
             $this->noteModel->content = $data->content;
             $this->noteModel->reminder = $data->reminder;
             $this->noteModel->updated_at = $data->updated_at;
 
-            $note = $this->noteModel->updateNote($noteId);
-            if ($note) {
+            $result = $this->noteModel->updateNote($noteId);
+            if ($result) {
                 echo json_encode(
                     array('message' => 'Note Updated Successfully')
                 );
@@ -179,9 +194,16 @@ class NoteController extends BaseController
     public function deleteNote()
     {
         IsAuthMiddleware::authenticate();
+        $userId = IsAuthMiddleware::getUserId();
 
         try {
             $noteId = isset($_GET['id']) ? $_GET['id'] : null;
+            $note = $this->noteModel->getNoteById($noteId);
+
+            if (!$note || $note->user_id != $userId) {
+                $this->respondWithError('Note not found or unauthorized');
+                return;
+            }
             $result = $this->noteModel->deleteNote($noteId);
             if ($result) {
                 echo json_encode(

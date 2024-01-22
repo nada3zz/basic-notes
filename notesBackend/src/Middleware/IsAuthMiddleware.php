@@ -45,4 +45,15 @@ class IsAuthMiddleware
         echo json_encode(['status' => 'success', 'message' => 'User signed out successfully', 'new_token' => $newToken]);
         exit;
     }
+
+    public static function getUserId()
+    {
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        $userData = self::validateToken($authHeader);
+
+        if (isset($userData['user_id'])) {
+            return $userData['user_id'];
+        }
+        return null;
+    }
 }
