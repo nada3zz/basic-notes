@@ -45,7 +45,7 @@ class UserModel
     public function getUsersWithReminder()
     {
         try {
-            $query = 'SELECT username, email FROM ' . $this->table . ' as u
+            $query = 'SELECT username, email, n.reminder FROM ' . $this->table . ' as u
             JOIN notes as n ON u.id = n.user_id 
             WHERE n.reminder IS NOT NULL
             ORDER BY n.reminder DESC';

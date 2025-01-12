@@ -22,7 +22,7 @@ class JwtUtil
         self::loadSecretKey();
 
         $issuedAt = time();
-        $expirationTime = $issuedAt + ($expirationMinutes * 100);
+        $expirationTime = $issuedAt + ($expirationMinutes * 60);
 
         $token = [
             'iat' => $issuedAt,

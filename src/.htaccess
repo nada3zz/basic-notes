@@ -1,11 +1,9 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Set the HTTP_AUTHORIZATION header for JWT
     RewriteCond %{HTTP:Authorization} ^(.*)
     RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 
-    # Other standard rewriting rules for PHP (adjust as needed)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [L]
